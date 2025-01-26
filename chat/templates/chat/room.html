@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat with {{ other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h2>Chat with {{ other_user.username }}</h2>
+            </div>
+            <div class="card-body chat-container" id="chat-messages">
+                {% for message in chat_messages %}
+                    <div class="message {% if message.sender == user %}sent{% else %}received{% endif %}">
+                        <div class="message-content">{{ message.content }}</div>
+                        <div class="timestamp">{{ message.timestamp|date:'M d, Y H:i' }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="card-footer">
+                <form id="chat-form" class="input-group">
+                    <input type="text" id="chat-message-input" class="form-control" placeholder="Type your message...">
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const roomName = "{{ room_name }}";
+    const username = "{{ user.username }}";
+    const roomId = "{{ room_id }}";
+    
+    const chatSocket = new WebSocket(
+        window.location.protocol === 'https:' ? 'wss://' : 'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+    );
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const messageContainer = document.createElement('div');
+        messageContainer.className = `message ${data.username === username ? 'sent' : 'received'}`;
+        
+        const content = document.createElement('div');
+        content.className = 'message-content';
+        content.textContent = data.message;
+        
+        const timestamp = document.createElement('div');
+        timestamp.className = 'timestamp';
+        timestamp.textContent = new Date().toLocaleString();
+        
+        messageContainer.appendChild(content);
+        messageContainer.appendChild(timestamp);
+        
+        document.querySelector('#chat-messages').appendChild(messageContainer);
+        messageContainer.scrollIntoView();
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    document.querySelector('#chat-message-input').focus();
+    document.querySelector('#chat-form').onsubmit = function(e) {
+        e.preventDefault();
+        const messageInputDom = document.querySelector('#chat-message-input');
+        const message = messageInputDom.value;
+        
+        if (message.trim()) {
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'username': username,
+                'room_id': roomId
+            }));
+            messageInputDom.value = '';
+        }
+    };
+
+    // Scroll to bottom on load
+    const chatMessages = document.querySelector('#chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+</script>
+{% endblock %}
