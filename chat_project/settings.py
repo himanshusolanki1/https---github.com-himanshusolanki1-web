@@ -139,3 +139,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'chat:index'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
+CSRF_TRUSTED_ORIGINS = ["https://django-procution-4ecc.up.railway.app"]
