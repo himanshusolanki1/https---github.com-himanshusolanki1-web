@@ -4,3 +4,4 @@ channels-redis==4.1.0
 daphne==4.0.0
 django-crispy-forms==2.1
 crispy-bootstrap5==2023.10
+gunicorn==21.2.0
